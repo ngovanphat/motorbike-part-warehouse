@@ -6,15 +6,18 @@ export type CartItem = {
   id: string
   name: string
   price: number
+  priceOfBatch: number
   image: string
   quantity: number
+  useBatchPrice: boolean
 }
 
 type CartContextType = {
   items: CartItem[]
-  addItem: (item: Omit<CartItem, "quantity">) => void
+  addItem: (item: Omit<CartItem, "quantity" | "useBatchPrice">) => void
   removeItem: (id: string) => void
   updateQuantity: (id: string, quantity: number) => void
+  togglePriceType: (id: string) => void
   clearCart: () => void
   isOpen: boolean
   setIsOpen: (isOpen: boolean) => void
@@ -43,7 +46,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("cart", JSON.stringify(items))
   }, [items])
 
-  const addItem = (product: Omit<CartItem, "quantity">) => {
+  const addItem = (product: Omit<CartItem, "quantity" | "useBatchPrice">) => {
     setItems((prevItems) => {
       const existingItem = prevItems.find((item) => item.id === product.id)
 
@@ -51,7 +54,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         return prevItems.map((item) => (item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item))
       }
 
-      return [...prevItems, { ...product, quantity: 1 }]
+      return [...prevItems, { ...product, quantity: 1, useBatchPrice: false }]
     })
   }
 
@@ -65,6 +68,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems((prevItems) => prevItems.map((item) => (item.id === id ? { ...item, quantity } : item)))
   }
 
+  const togglePriceType = (id: string) => {
+    setItems((prevItems) => 
+      prevItems.map((item) => 
+        item.id === id 
+          ? { ...item, useBatchPrice: !item.useBatchPrice } 
+          : item
+      )
+    )
+  }
+
   const clearCart = () => {
     setItems([])
   }
@@ -76,6 +89,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         addItem,
         removeItem,
         updateQuantity,
+        togglePriceType,
         clearCart,
         isOpen,
         setIsOpen,

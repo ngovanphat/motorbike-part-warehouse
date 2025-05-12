@@ -5,6 +5,7 @@ import { Header } from "@/components/header"
 import { CartProvider } from "@/components/cart-provider"
 import { ThemeProvider } from "@/components/theme-provider"
 import { LanguageProvider } from "@/components/language-provider"
+import { Toaster } from "@/components/ui/toaster"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -20,9 +21,9 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
           <LanguageProvider>
             <CartProvider>
               <div className="min-h-screen flex flex-col">
@@ -34,6 +35,7 @@ export default function RootLayout({
                   </div>
                 </footer>
               </div>
+              <Toaster />
             </CartProvider>
           </LanguageProvider>
         </ThemeProvider>

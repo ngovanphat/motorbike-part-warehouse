@@ -9,8 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { toast } from "@/components/ui/use-toast"
 import { getProducts } from "@/lib/product-service"
 import type { Product } from "@/types/product"
-import { Search, Plus, AlertCircle, RefreshCw } from "lucide-react"
-import { formatCurrency } from "@/lib/utils"
+import { Search, Plus, AlertCircle, RefreshCw, Save, Trash2 } from "lucide-react"
+import { formatCurrency, textMatchesSearch } from "@/lib/utils"
+import { clearProductCache, getCacheExpiryTime, hasCachedProducts } from "@/lib/cache-utils"
 
 export function ProductTable() {
   const { addItem } = useCart()
@@ -19,13 +20,40 @@ export function ProductTable() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isFromCache, setIsFromCache] = useState(false)
+  const [cacheExpiry, setCacheExpiry] = useState<string | null>(null)
 
-  const loadProducts = async () => {
+  const loadProducts = async (forceRefresh = false) => {
     try {
       setLoading(true)
       setError(null)
+      
+      // If we're forcing a refresh, clear the cache
+      if (forceRefresh) {
+        clearProductCache()
+      }
+      
+      // Check if we have data in the cache before making the API call
+      const hadCache = hasCachedProducts()
+      
       const data = await getProducts()
       setProducts(data)
+      
+      // Check if the data came from cache after the API call
+      const cacheWasUsed = hasCachedProducts() && hadCache && !forceRefresh
+      setIsFromCache(cacheWasUsed)
+      
+      if (cacheWasUsed) {
+        const expiryTime = getCacheExpiryTime()
+        setCacheExpiry(expiryTime)
+        
+        toast({
+          title: t("dataFromCache"),
+          description: t("usingCachedProductData"),
+          duration: 3000,
+          className: "bg-blue-50"
+        })
+      }
     } catch (err: any) {
       console.error("Error fetching products:", err)
       setError(t("loadingError"))
@@ -38,10 +66,25 @@ export function ProductTable() {
     loadProducts()
   }, [t])
 
+  const handleRefresh = () => {
+    loadProducts(true)
+  }
+
+  const clearCache = () => {
+    clearProductCache()
+    toast({
+      title: t("cacheCleared"),
+      description: t("productCacheCleared"),
+      duration: 3000,
+    })
+    // Reload products after clearing cache
+    loadProducts(true)
+  }
+
   const filteredProducts = products.filter(
     (product) =>
-      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchQuery.toLowerCase()),
+      textMatchesSearch(product.name, searchQuery) ||
+      textMatchesSearch(product.description, searchQuery)
   )
 
   const handleAddToCart = (product: Product) => {
@@ -59,6 +102,7 @@ export function ProductTable() {
       id: product.id,
       name: product.name,
       price: product.price,
+      priceOfBatch: product.priceOfBatch,
       image: product.image,
     })
 
@@ -97,10 +141,34 @@ export function ProductTable() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <Button variant="outline" size="icon" onClick={loadProducts} title={t("refresh")}>
+        <Button 
+          variant="outline" 
+          size="icon" 
+          onClick={handleRefresh} 
+          title={t("refresh")}
+        >
           <RefreshCw className="h-4 w-4" />
         </Button>
+        {/* Only show in development mode */}
+        {process.env.NODE_ENV === 'development' && (
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={clearCache}
+            title={t("clearCache")}
+            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        )}
       </div>
+
+      {isFromCache && (
+        <div className="text-xs text-blue-500 flex items-center">
+          <Save className="h-3 w-3 mr-1" />
+          {t("usingCachedData")} {cacheExpiry && `(${t("expires")}: ${cacheExpiry})`}
+        </div>
+      )}
 
       {error && (
         <div className="flex flex-col items-center justify-center py-4 text-destructive">
@@ -108,7 +176,7 @@ export function ProductTable() {
             <AlertCircle className="h-6 w-6 mr-2" />
             <span>{error}</span>
           </div>
-          <Button onClick={loadProducts} variant="outline" className="flex items-center gap-2">
+          <Button onClick={handleRefresh} variant="outline" className="flex items-center gap-2">
             <RefreshCw className="h-4 w-4" />
             {t("tryAgain")}
           </Button>
@@ -123,9 +191,10 @@ export function ProductTable() {
               <TableHead>{t("productName")}</TableHead>
               <TableHead>{t("description")}</TableHead>
               <TableHead className="text-right">{t("price")}</TableHead>
+              <TableHead className="text-right">{t("priceOfBatch")}</TableHead>
               <TableHead className="text-center">{t("stock")}</TableHead>
-              <TableHead className="w-[100px] text-center">{t("action")}</TableHead>
-            </TableRow>
+               <TableHead className="w-[100px] text-center">{t("action")}</TableHead>
+              </TableRow>
           </TableHeader>
           <TableBody>
             {filteredProducts.length === 0 ? (
@@ -143,6 +212,7 @@ export function ProductTable() {
                     <TableCell>{product.name}</TableCell>
                     <TableCell className="max-w-xs truncate">{product.description}</TableCell>
                     <TableCell className="text-right">{formatCurrency(product.price)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(product.priceOfBatch)}</TableCell>
                     <TableCell className="text-center">
                       <span className={stockStatus.className}>
                         {product.stock} ({stockStatus.label})

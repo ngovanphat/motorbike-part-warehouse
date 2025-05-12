@@ -2,21 +2,23 @@
 
 import { useState, useRef, useEffect } from "react"
 import Image from "next/image"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useCart } from "@/components/cart-provider"
 import { useLanguage } from "@/components/language-provider"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Switch } from "@/components/ui/switch"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
-import { Printer, ShoppingBag, Home, Plus, Minus, Search } from "lucide-react"
+import { Printer, ShoppingBag, Home, Plus, Minus, Search, Save } from "lucide-react"
+import { toast } from "@/components/ui/use-toast"
 import { getProducts } from "@/lib/product-service"
 import type { Product } from "@/types/product"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, textMatchesSearch } from "@/lib/utils"
+import { hasCachedProducts, getCacheExpiryTime } from "@/lib/cache-utils"
 
 export default function CheckoutPage() {
-  const { items, clearCart, addItem, updateQuantity, removeItem } = useCart()
+  const { items, clearCart, addItem, updateQuantity, removeItem, togglePriceType } = useCart()
   const { t } = useLanguage()
   const router = useRouter()
   const [products, setProducts] = useState<Product[]>([])
@@ -26,6 +28,8 @@ export default function CheckoutPage() {
   const [invoiceVisible, setInvoiceVisible] = useState(false)
   const invoiceRef = useRef<HTMLDivElement>(null)
   const [searchQuery, setSearchQuery] = useState("")
+  const [isFromCache, setIsFromCache] = useState(false)
+  const [cacheExpiry, setCacheExpiry] = useState<string | null>(null)
 
   // Load products
   useEffect(() => {
@@ -33,8 +37,28 @@ export default function CheckoutPage() {
       try {
         setLoading(true)
         setError(null)
+        
+        // Check if we have data in the cache before making the API call
+        const hadCache = hasCachedProducts()
+        
         const data = await getProducts()
         setProducts(data)
+        
+        // Check if the data came from cache
+        const cacheWasUsed = hasCachedProducts() && hadCache
+        setIsFromCache(cacheWasUsed)
+        
+        if (cacheWasUsed) {
+          const expiryTime = getCacheExpiryTime()
+          setCacheExpiry(expiryTime)
+          
+          toast({
+            title: t("dataFromCache"),
+            description: t("usingCachedProductData"),
+            duration: 3000,
+            className: "bg-blue-50"
+          })
+        }
       } catch (err: any) {
         console.error("Error fetching products:", err)
         setError(t("loadingError"))
@@ -75,14 +99,20 @@ export default function CheckoutPage() {
       id: product.id,
       name: product.name,
       price: product.price,
+      priceOfBatch: product.priceOfBatch,
       image: product.image,
     })
+  }
+
+  // Get the effective price based on useBatchPrice flag
+  const getEffectivePrice = (item: (typeof items)[0]) => {
+    return item.useBatchPrice ? item.priceOfBatch : item.price
   }
 
   // Calculate totals
   const total = items
     .filter(item => selectedItems[item.id])
-    .reduce((sum, item) => sum + item.price * item.quantity, 0)
+    .reduce((sum, item) => sum + getEffectivePrice(item) * item.quantity, 0)
 
   const handlePrintInvoice = () => {
     if (invoiceRef.current) {
@@ -136,8 +166,8 @@ export default function CheckoutPage() {
   // Filter products for the product selector
   const filteredProducts = products.filter(
     (product) =>
-      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchQuery.toLowerCase()),
+      textMatchesSearch(product.name, searchQuery) ||
+      textMatchesSearch(product.description, searchQuery),
   )
 
   if (loading) {
@@ -199,11 +229,16 @@ export default function CheckoutPage() {
                     <td className="py-4">
                       <div className="flex items-center gap-3">
                         <span>{item.name}</span>
+                        {item.useBatchPrice && (
+                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                            {t("batchPricing")}
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="py-4 text-right">{item.quantity}</td>
-                    <td className="py-4 text-right">{formatCurrency(item.price)}</td>
-                    <td className="py-4 text-right">{formatCurrency(item.price * item.quantity)}</td>
+                    <td className="py-4 text-right">{formatCurrency(getEffectivePrice(item))}</td>
+                    <td className="py-4 text-right">{formatCurrency(getEffectivePrice(item) * item.quantity)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -212,7 +247,7 @@ export default function CheckoutPage() {
             <div className="flex justify-end mb-8">
               <div className="w-64">
                 <div className="flex justify-between py-2 font-bold text-lg border-t border-gray-300">
-                  <span>{t("total")}:</span>
+                  <span className="mr-2">{t("total")}:</span>
                   <span>{formatCurrency(total)}</span>
                 </div>
               </div>
@@ -260,6 +295,12 @@ export default function CheckoutPage() {
         <div className="border rounded-lg overflow-hidden">
           <div className="p-4 bg-muted/50">
             <h3 className="font-medium">{items.length === 0 ? t("addProductsBeforeCheckout") : t("yourCart")}</h3>
+            {isFromCache && (
+              <div className="text-xs text-blue-500 flex items-center mt-2">
+                <Save className="h-3 w-3 mr-1" />
+                {t("usingCachedData")} {cacheExpiry && `(${t("expires")}: ${cacheExpiry})`}
+              </div>
+            )}
           </div>
 
           <div className="p-4 border-b">
@@ -282,7 +323,11 @@ export default function CheckoutPage() {
                   </div>
                   <div className="flex-1 truncate">
                     <p className="font-medium truncate">{product.name}</p>
-                    <p className="text-sm text-muted-foreground">{formatCurrency(product.price)}</p>
+                    <div className="flex text-sm text-muted-foreground">
+                      <span>{formatCurrency(product.price)}</span>
+                      <span className="mx-1">|</span>
+                      <span className="text-primary">{t("batchPricing")}: {formatCurrency(product.priceOfBatch)}</span>
+                    </div>
                   </div>
                   <Button 
                     variant="ghost" 
@@ -306,6 +351,7 @@ export default function CheckoutPage() {
                     <TableHead className="w-[80px]">{t("id")}</TableHead>
                     <TableHead>{t("productName")}</TableHead>
                     <TableHead className="text-right">{t("price")}</TableHead>
+                    <TableHead className="text-center w-[180px]">{t("batchPricing")}</TableHead>
                     <TableHead className="text-center">{t("quantity")}</TableHead>
                     <TableHead className="text-right">{t("total")}</TableHead>
                   </TableRow>
@@ -329,7 +375,29 @@ export default function CheckoutPage() {
                           <span>{item.name}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-right">{formatCurrency(item.price)}</TableCell>
+                      <TableCell className="text-right">
+                        {item.useBatchPrice ? (
+                          <span className="text-muted-foreground line-through">
+                            {formatCurrency(item.price)}
+                          </span>
+                        ) : (
+                          <span className="font-medium">
+                            {formatCurrency(item.price)}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <Switch
+                            checked={item.useBatchPrice}
+                            onCheckedChange={() => togglePriceType(item.id)}
+                            aria-label={item.useBatchPrice ? t("useBatchPrice") : t("useRegularPrice")}
+                          />
+                          <span className={item.useBatchPrice ? "font-medium" : "text-muted-foreground"}>
+                            {formatCurrency(item.priceOfBatch)}
+                          </span>
+                        </div>
+                      </TableCell>
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center">
                           <Button 
@@ -359,7 +427,9 @@ export default function CheckoutPage() {
                           </Button>
                         </div>
                       </TableCell>
-                      <TableCell className="text-right">{formatCurrency(item.price * item.quantity)}</TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(getEffectivePrice(item) * item.quantity)}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

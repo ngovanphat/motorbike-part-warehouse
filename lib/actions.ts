@@ -27,7 +27,6 @@ export async function fetchProductsAction(): Promise<Product[]> {
     }
 
     const data = await response.json()
-    console.log(data)
     // If no values returned, return empty array
     if (!data.values || data.values.length === 0) {
       return []
@@ -93,10 +92,11 @@ export async function testSheetData(sheetName = "Products", range = "A1:F100") {
           return {
             id: row[0],
             name: row[1],
-            description: row[3],
-            price: Number.parseFloat(row[2]) || 0,
-            stock: Number.parseInt(row[4], 10) || 0,
-            image: row[5] || "/placeholder.svg?height=400&width=400",
+            description: row[4],
+            price: Number.parseFloat(row[3]) || 0,
+            priceOfBatch: Number.parseFloat(row[2]) || 0,
+            stock: Number.parseInt(row[5], 10) || 0,
+            image: row[6] || "/placeholder.svg?height=400&width=400",
           }
         })
         .filter(Boolean)
@@ -123,10 +123,11 @@ function parseGoogleSheetsData(rows: string[][]): Product[] {
       return {
         id: row[0],
         name: row[1],
-        description: row[3],
-        price: Number.parseFloat(row[2]) || 0,
-        stock: Number.parseInt(row[4], 10) || 0,
-        image: row[5] || "/placeholder.svg?height=400&width=400",
+        description: row[4],
+        price: Number.parseFloat(row[3]) || 0,
+        priceOfBatch: Number.parseFloat(row[2]) || 0,
+        stock: Number.parseInt(row[5], 10) || 0,
+        image: row[6] || "/placeholder.svg?height=400&width=400",
       }
     })
 }

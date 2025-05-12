@@ -13,6 +13,10 @@ export const translations = {
     productName: "Product Name",
     description: "Description",
     price: "Price",
+    priceOfBatch: "Batch Price",
+    batchPricing: "Batch Pricing",
+    useBatchPrice: "Use Batch Price",
+    useRegularPrice: "Use Regular Price",
     stock: "Stock",
     action: "Action",
     searchProducts: "Search products...",
@@ -71,6 +75,19 @@ export const translations = {
     // Errors
     loadingError: "Error loading products. Please try again.",
     loading: "Loading products...",
+
+    // Cache
+    dataFromCache: "Using Cached Data",
+    usingCachedProductData: "Products loaded from local cache",
+    usingCachedData: "Using cached data. Click refresh to update.",
+
+    // Cache clearing
+    clearCache: "Clear Cache",
+    cacheCleared: "Cache Cleared",
+    productCacheCleared: "Product cache has been cleared",
+
+    // Cache expiry
+    expires: "expires in",
   },
   vi: {
     // Navigation
@@ -84,6 +101,10 @@ export const translations = {
     productName: "Tên Sản Phẩm",
     description: "Mô Tả",
     price: "Giá",
+    priceOfBatch: "Giá Sỉ",
+    batchPricing: "Giá Sỉ",
+    useBatchPrice: "Sử Dụng Giá Sỉ",
+    useRegularPrice: "Sử Dụng Giá Thường",
     stock: "Tồn Kho",
     action: "Thao Tác",
     searchProducts: "Tìm kiếm sản phẩm...",
@@ -142,6 +163,19 @@ export const translations = {
     // Errors
     loadingError: "Lỗi khi tải sản phẩm. Vui lòng thử lại.",
     loading: "Đang tải sản phẩm...",
+
+    // Cache
+    dataFromCache: "Sử dụng dữ liệu đã lưu",
+    usingCachedProductData: "Sản phẩm được tải từ bộ nhớ đệm",
+    usingCachedData: "Đang sử dụng dữ liệu đã lưu. Nhấn làm mới để cập nhật.",
+
+    // Cache clearing
+    clearCache: "Xóa bộ nhớ đệm",
+    cacheCleared: "Đã xóa bộ nhớ đệm",
+    productCacheCleared: "Bộ nhớ đệm sản phẩm đã được xóa",
+
+    // Cache expiry
+    expires: "hết hạn sau",
   },
 }
 
