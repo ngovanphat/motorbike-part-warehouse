@@ -44,7 +44,7 @@ export function Invoice({ invoice }: InvoiceProps) {
           <h2 className="text-xl font-bold">{t("storeName")}</h2>
           <p className="text-gray-500">{t("storeAddress")}</p>
           <p className="text-gray-500">{t("storeCity")}</p>
-          <p className="text-gray-500">{t("storeEmail")}</p>
+          <p className="text-gray-500">{t("storePhone")}</p>
         </div>
       </div>
 

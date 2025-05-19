@@ -2,6 +2,26 @@ export type Language = "en" | "vi"
 
 export const translations = {
   en: {
+    dashboard: "Dashboard",
+    products: "Products",
+    invoices: "Invoices",
+
+    // Dashboard
+    dailySales: "Daily Sales",
+    totalSalesPerDay: "Total sales amount per day",
+    productSummary: "Summary of quantities sold per product",
+
+    // Invoice
+    invoiceNumber: "Invoice Number",
+    date: "Date",
+    customer: "Customer",
+    total: "Total",
+    actions: "Actions",
+    viewInvoice: "View Invoice",
+    noInvoicesFound: "No invoices found",
+    noInvoicesYet: "No invoices yet",
+    searchInvoices: "Search invoices...",
+    close: "Close",
     // Navigation
     productCatalog: "Product Catalog",
     cart: "Cart",
@@ -36,7 +56,6 @@ export const translations = {
     continueShopping: "Continue Shopping",
     subtotal: "Subtotal",
     tax: "Tax",
-    total: "Total",
 
     // Checkout
     shippingInformation: "Shipping Information",
@@ -49,12 +68,15 @@ export const translations = {
     zipCode: "Zip Code",
     completeOrder: "Complete Order",
     processing: "Processing...",
+    bankDetails: "Bank Details",
+    bankName: "Bank Name",
+    accountNumber: "Account Number",
+    accountOwner: "Account Owner",
 
     // Invoice
     invoice: "INVOICE",
     billTo: "Bill To:",
     invoiceDetails: "Invoice Details:",
-    date: "Date:",
     paymentMethod: "Payment Method:",
     status: "Status:",
     paid: "Paid",
@@ -65,12 +87,20 @@ export const translations = {
     finishShopping: "Finish Shopping",
     thankYou: "Thank you for your purchase!",
     contactSupport: "If you have any questions, please contact our customer support.",
-
+    discount: "Discount",
+    discountTooHigh: "Discount Too High",
+    discountCannotExceedSubtotal: "Discount Cannot Exceed Subtotal",
+    invalidDiscount: "Invalid Discount",
+    pleaseEnterValidDiscount: "Please Enter Valid Discount",
+    apply: "Apply",
+    clearDiscount: "Clear Discount",
+    applyDiscount: "Apply Discount",
+    customDiscountPlaceholder: "Enter custom discount",
     // Store Info
-    storeName: "E-Commerce Store",
-    storeAddress: "123 Commerce St",
-    storeCity: "New York, NY 10001",
-    storeEmail: "support@ecommerce.com",
+    storeName: "Thông phụ tùng xe máy",
+    storeAddress: "9-11 Phan Bội Châu",
+    storeCity: "Hồng Ngự, Đồng Tháp, Việt Nam",
+    storePhone: "0918716971",
 
     // Errors
     loadingError: "Error loading products. Please try again.",
@@ -90,6 +120,27 @@ export const translations = {
     expires: "expires in",
   },
   vi: {
+    dashboard: "Bảng Điều Khiển",
+    products: "Sản Phẩm",
+    invoices: "Hóa Đơn",
+
+    // Dashboard
+    dailySales: "Doanh Thu Ngày",
+    totalSalesPerDay: "Tổng doanh thu ngày",
+    productSummary: "Tổng số lượng sản phẩm bán ra",
+
+    // Invoice
+    invoiceNumber: "Số Hóa Đơn",
+    date: "Ngày",
+    customer: "Khách Hàng",
+    total: "Tổng Cộng",
+    actions: "Hành Động",
+    viewInvoice: "Xem Hóa Đơn",
+    noInvoicesFound: "Không tìm thấy hóa đơn nào",
+    noInvoicesYet: "Không có hóa đơn nào",
+    searchInvoices: "Tìm kiếm hóa đơn...",
+    close: "Đóng",
+
     // Navigation
     productCatalog: "Danh Mục Sản Phẩm",
     cart: "Giỏ Hàng",
@@ -124,7 +175,6 @@ export const translations = {
     continueShopping: "Tiếp Tục Mua Sắm",
     subtotal: "Tạm Tính",
     tax: "Thuế",
-    total: "Tổng Cộng",
 
     // Checkout
     shippingInformation: "Thông Tin Giao Hàng",
@@ -137,12 +187,25 @@ export const translations = {
     zipCode: "Mã Bưu Điện",
     completeOrder: "Hoàn Tất Đơn Hàng",
     processing: "Đang Xử Lý...",
+    discount: "Giảm Giá",
+    discountTooHigh: "Giảm Giá Quá Cao",
+    discountCannotExceedSubtotal: "Giảm Giá Không Được Vượt Quá Tổng Tiền",
+    invalidDiscount: "Giảm Giá Không Hợp Lệ",
+    pleaseEnterValidDiscount: "Vui Lòng Nhập Giảm Giá Hợp Lệ",
+    apply: "Áp Dụng",
+    clearDiscount: "Xóa Giảm Giá",
+    customDiscountPlaceholder: "Nhập giảm giá tùy chỉnh",
+    applyDiscount: "Áp Dụng Giảm Giá",
+    recommendedDiscounts: "Giảm Giá Khuyến Nghị",
+    bankDetails: "Thông Tin Ngân Hàng",
+    bankName: "Tên Ngân Hàng",
+    accountNumber: "Số Tài Khoản",
+    accountOwner: "Chủ Tài Khoản",
 
     // Invoice
     invoice: "HÓA ĐƠN",
     billTo: "Người Nhận:",
     invoiceDetails: "Chi Tiết Hóa Đơn:",
-    date: "Ngày:",
     paymentMethod: "Phương Thức Thanh Toán:",
     status: "Trạng Thái:",
     paid: "Đã Thanh Toán",
@@ -155,10 +218,10 @@ export const translations = {
     contactSupport: "Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ bộ phận hỗ trợ khách hàng của chúng tôi.",
 
     // Store Info
-    storeName: "Cửa Hàng Thương Mại Điện Tử",
-    storeAddress: "123 Đường Thương Mại",
-    storeCity: "Hà Nội, Việt Nam",
-    storeEmail: "hotro@ecommerce.com",
+    storeName: "Cửa hàng Thông phụ tùng xe máy",
+    storeAddress: "9-11 Phan Bội Châu",
+    storeCity: "Hồng Ngự, Đồng Tháp, Việt Nam",
+    storePhone: "0918716971",
 
     // Errors
     loadingError: "Lỗi khi tải sản phẩm. Vui lòng thử lại.",

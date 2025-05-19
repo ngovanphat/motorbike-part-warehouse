@@ -10,9 +10,10 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Switch } from "@/components/ui/switch"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
-import { Printer, ShoppingBag, Home, Plus, Minus, Search, Save } from "lucide-react"
+import { Printer, ShoppingBag, Home, Plus, Minus, Search, Save, Loader2 } from "lucide-react"
 import { toast } from "@/components/ui/use-toast"
 import { getProducts } from "@/lib/product-service"
+import { supabase } from "@/lib/supabase"
 import type { Product } from "@/types/product"
 import { formatCurrency, textMatchesSearch } from "@/lib/utils"
 import { hasCachedProducts, getCacheExpiryTime } from "@/lib/cache-utils"
@@ -30,6 +31,11 @@ export default function CheckoutPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [isFromCache, setIsFromCache] = useState(false)
   const [cacheExpiry, setCacheExpiry] = useState<string | null>(null)
+  const [discountAmount, setDiscountAmount] = useState(0)
+  const [customDiscountInput, setCustomDiscountInput] = useState("")
+  const [isSaving, setIsSaving] = useState(false)
+
+  const RECOMMENDED_DISCOUNTS = [10000, 20000, 50000, 100000] // Assuming fixed currency amounts
 
   // Load products
   useEffect(() => {
@@ -110,9 +116,50 @@ export default function CheckoutPage() {
   }
 
   // Calculate totals
-  const total = items
+  const subtotal = items
     .filter(item => selectedItems[item.id])
     .reduce((sum, item) => sum + getEffectivePrice(item) * item.quantity, 0)
+
+  const finalTotal = Math.max(0, subtotal - discountAmount)
+
+  const handleRecommendedDiscountClick = (amount: number) => {
+    setDiscountAmount(amount)
+    setCustomDiscountInput("")
+  }
+
+  const handleCustomDiscountInputChange = (value: string) => {
+    setCustomDiscountInput(value)
+  }
+
+  const handleApplyCustomDiscount = () => {
+    const parsedDiscount = parseFloat(customDiscountInput)
+    if (!isNaN(parsedDiscount) && parsedDiscount > 0) {
+      if (parsedDiscount > subtotal) {
+        toast({
+          title: "Discount Too High",
+          description: "Discount cannot exceed subtotal.",
+          variant: "destructive",
+          duration: 3000,
+        })
+        setDiscountAmount(subtotal) // Apply maximum possible discount
+        setCustomDiscountInput(subtotal.toString())
+      } else {
+        setDiscountAmount(parsedDiscount)
+      }
+    } else {
+      toast({
+        title: "Invalid Discount",
+        description: "Please enter a valid positive number for the discount.",
+        variant: "destructive",
+        duration: 3000,
+      })
+    }
+  }
+
+  const handleClearDiscount = () => {
+    setDiscountAmount(0)
+    setCustomDiscountInput("")
+  }
 
   const handlePrintInvoice = () => {
     if (invoiceRef.current) {
@@ -127,18 +174,174 @@ export default function CheckoutPage() {
             <head>
               <title>${t("invoice")} #INV-${Date.now()}</title>
               <style>
-                body { font-family: Arial, sans-serif; }
-                .invoice-container { max-width: 800px; margin: 0 auto; padding: 20px; }
-                table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
-                th { background-color: #f8f9fa; }
-                .text-right { text-align: right; }
-                .total-row { font-weight: bold; }
+                body { 
+                  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+                  color: #0f172a;
+                  line-height: 1.5;
+                }
+                .invoice-container { 
+                  max-width: 800px; 
+                  margin: 0 auto; 
+                  padding: 20px; 
+                  background-color: white;
+                }
+                .invoice-header {
+                  display: flex;
+                  justify-content: space-between;
+                  margin-bottom: 2rem;
+                }
+                .invoice-title {
+                  font-size: 1.5rem;
+                  font-weight: bold;
+                }
+                .invoice-id {
+                  color: #64748b;
+                }
+                .store-info {
+                  text-align: right;
+                }
+                .store-name {
+                  font-size: 1.25rem;
+                  font-weight: bold;
+                }
+                .store-detail {
+                  color: #64748b;
+                }
+                table { 
+                  width: 100%; 
+                  border-collapse: collapse; 
+                  margin: 1.5rem 0;
+                }
+                th, td { 
+                  padding: 0.75rem; 
+                  text-align: left; 
+                  border-bottom: 1px solid #e2e8f0; 
+                }
+                th { 
+                  font-weight: 600; 
+                  background-color: #f8fafc; 
+                }
+                .text-right { 
+                  text-align: right; 
+                }
+                .batch-pricing {
+                  display: inline-block;
+                  background-color: rgba(99, 102, 241, 0.1);
+                  color: rgb(99, 102, 241);
+                  padding: 0.125rem 0.5rem;
+                  border-radius: 9999px;
+                  font-size: 0.75rem;
+                  margin-left: 0.5rem;
+                }
+                .summary {
+                  display: flex;
+                  justify-content: flex-end;
+                  margin-bottom: 2rem;
+                }
+                .summary-content {
+                  width: 16rem;
+                }
+                .summary-row {
+                  display: flex;
+                  justify-content: space-between;
+                  padding: 0.5rem 0;
+                  border-top: 1px solid #e2e8f0;
+                }
+                .discount-row {
+                  color: #dc2626;
+                }
+                .total-row {
+                  font-weight: bold;
+                  font-size: 1.25rem;
+                  border-top: 1px solid #e2e8f0;
+                }
+                .footer {
+                  border-top: 1px solid #e2e8f0;
+                  padding-top: 2rem;
+                  text-align: center;
+                  color: #64748b;
+                }
+                .bank-info {
+                  margin-top: 1.5rem;
+                  border-top: 1px solid #e2e8f0;
+                  padding-top: 1rem;
+                }
+                .bank-info p {
+                  margin: 0.25rem 0;
+                }
               </style>
             </head>
             <body>
               <div class="invoice-container">
-                ${invoiceRef.current.innerHTML}
+                <div class="invoice-header">
+                  <div>
+                    <div class="invoice-title">${t("invoice")}</div>
+                    <div class="invoice-id">#INV-${Date.now()}</div>
+                  </div>
+                  <div class="store-info">
+                    <div class="store-name">${t("storeName")}</div>
+                    <div class="store-detail">${t("storeAddress")}</div>
+                    <div class="store-detail">${t("storeCity")}</div>
+                    <div class="store-detail">${t("storePhone")}</div>
+                  </div>
+                </div>
+
+                <table>
+                  <thead>
+                    <tr>
+                      <th>${t("item")}</th>
+                      <th class="text-right">${t("quantity")}</th>
+                      <th class="text-right">${t("price")}</th>
+                      <th class="text-right">${t("total")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${items
+                      .filter(item => selectedItems[item.id])
+                      .map((item) => `
+                        <tr>
+                          <td>
+                            ${item.name}
+                            ${item.useBatchPrice ? `<span class="batch-pricing">${t("batchPricing")}</span>` : ''}
+                          </td>
+                          <td class="text-right">${item.quantity}</td>
+                          <td class="text-right">${formatCurrency(getEffectivePrice(item))}</td>
+                          <td class="text-right">${formatCurrency(getEffectivePrice(item) * item.quantity)}</td>
+                        </tr>
+                      `).join('')}
+                  </tbody>
+                </table>
+
+                <div class="summary">
+                  <div class="summary-content">
+                    <div class="summary-row">
+                      <span>${t("subtotal")}</span>
+                      <span>${formatCurrency(subtotal)}</span>
+                    </div>
+                    ${discountAmount > 0 ? `
+                      <div class="summary-row discount-row">
+                        <span>${t("discount")}</span>
+                        <span>-${formatCurrency(discountAmount)}</span>
+                      </div>
+                    ` : ''}
+                    <div class="summary-row total-row">
+                      <span>${t("total")}:</span>
+                      <span>${formatCurrency(finalTotal)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="footer">
+                  <p>${t("thankYou")}</p>
+                  <p>${t("contactSupport")}</p>
+                  
+                  <div class="bank-info">
+                    <p><strong>${t("bankDetails") || "Bank Details"}</strong></p>
+                    <p>${t("bankName") || "Bank Name"}: ACB</p>
+                    <p>${t("accountNumber") || "Account Number"}: 3761487</p>
+                    <p>${t("accountOwner") || "Account Owner"}: LE THI NHU UYEN</p>
+                  </div>
+                </div>
               </div>
             </body>
           </html>
@@ -158,9 +361,78 @@ export default function CheckoutPage() {
     }
   }
 
-  const handleFinish = () => {
+  const saveInvoiceToSupabase = async () => {
+    const invoiceNumber = `INV-${Date.now()}`
+    const currentDate = new Date().toISOString().split('T')[0] // Format as YYYY-MM-DD
+    
+    // Filter out unselected items
+    const selectedItemsData = items
+      .filter(item => selectedItems[item.id])
+      .map(item => ({
+        id: item.id,
+        name: item.name,
+        price: getEffectivePrice(item),
+        quantity: item.quantity,
+        total: getEffectivePrice(item) * item.quantity,
+        useBatchPrice: item.useBatchPrice
+      }))
+    
+    const invoiceData = {
+      invoice_number: invoiceNumber,
+      date: currentDate,
+      customer: "Guest", // Could be replaced with actual customer data if available
+      items: selectedItemsData,
+      discount: discountAmount,
+      total_amount: finalTotal
+    }
+    
+    const { data, error } = await supabase
+      .from('invoices')
+      .insert(invoiceData)
+    
+    if (error) {
+      throw new Error(error.message)
+    }
+    
+    return { invoiceNumber, data }
+  }
+
+  const resetPageState = () => {
     clearCart()
-    router.push("/")
+    setSelectedItems({})
+    setInvoiceVisible(false)
+    setSearchQuery("")
+    setDiscountAmount(0)
+    setCustomDiscountInput("")
+  }
+
+  const handleFinish = async () => {
+    try {
+      setIsSaving(true)
+      
+      // Save invoice to Supabase
+      const { invoiceNumber } = await saveInvoiceToSupabase()
+      
+      // Reset page state without navigation
+      resetPageState()
+      
+      // Show success message
+      toast({
+        title: "Invoice Saved",
+        description: `Invoice number: ${invoiceNumber}`,
+        duration: 5000,
+      })
+    } catch (error: any) {
+      console.error("Error saving invoice:", error)
+      toast({
+        title: "Error Saving Invoice",
+        description: error.message || "Please try again",
+        variant: "destructive",
+        duration: 5000,
+      })
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   // Filter products for the product selector
@@ -208,7 +480,7 @@ export default function CheckoutPage() {
                 <h2 className="text-xl font-bold">{t("storeName")}</h2>
                 <p className="text-gray-500">{t("storeAddress")}</p>
                 <p className="text-gray-500">{t("storeCity")}</p>
-                <p className="text-gray-500">{t("storeEmail")}</p>
+                <p className="text-gray-500">{t("storePhone")}</p>
               </div>
             </div>
 
@@ -246,9 +518,19 @@ export default function CheckoutPage() {
 
             <div className="flex justify-end mb-8">
               <div className="w-64">
+                <div className="flex justify-between py-2 border-t border-gray-300">
+                  <span>{t("subtotal")}</span>
+                  <span>{formatCurrency(subtotal)}</span>
+                </div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between py-2 text-red-600">
+                    <span>{t("discount")}</span>
+                    <span>-{formatCurrency(discountAmount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between py-2 font-bold text-lg border-t border-gray-300">
                   <span className="mr-2">{t("total")}:</span>
-                  <span>{formatCurrency(total)}</span>
+                  <span>{formatCurrency(finalTotal)}</span>
                 </div>
               </div>
             </div>
@@ -256,6 +538,14 @@ export default function CheckoutPage() {
             <div className="border-t border-gray-300 pt-8 text-center text-gray-500">
               <p>{t("thankYou")}</p>
               <p className="mt-2">{t("contactSupport")}</p>
+              
+              {/* Bank information */}
+              <div className="mt-4 border-t border-gray-200 pt-4 text-left">
+                <p className="font-medium">{t("bankDetails") || "Bank Details"}</p>
+                <p className="mt-1">{t("bankName") || "Bank Name"}: ACB</p>
+                <p>{t("accountNumber") || "Account Number"}: 3761487</p>
+                <p>{t("accountOwner") || "Account Owner"}: LE THI NHU UYEN</p>
+              </div>
             </div>
           </div>
 
@@ -278,8 +568,17 @@ export default function CheckoutPage() {
             <Button 
               onClick={handleFinish} 
               variant="default"
+              disabled={isSaving}
+              className="flex items-center gap-2"
             >
-              {t("finishShopping")}
+              {isSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                t("finishShopping")
+              )}
             </Button>
           </div>
         </div>
@@ -435,9 +734,57 @@ export default function CheckoutPage() {
                 </TableBody>
               </Table>
               <div className="p-4 space-y-3 border-t bg-muted/30">
-                <div className="flex justify-between font-medium text-lg">
+                <div className="flex justify-between font-medium">
+                  <span>{t("subtotal")}</span>
+                  <span>{formatCurrency(subtotal)}</span>
+                </div>
+
+                {/* Discount Section Start */}
+                <div className="space-y-2 pt-3">
+                  <h4 className="font-medium text-sm text-muted-foreground">{t("applyDiscount") || "Apply Discount"}</h4>
+                  <div className="flex gap-2 flex-wrap">
+                    {RECOMMENDED_DISCOUNTS.map((amount) => (
+                      <Button 
+                        key={amount} 
+                        variant={discountAmount === amount ? "default" : "outline"} 
+                        size="sm"
+                        onClick={() => handleRecommendedDiscountClick(amount)}
+                        disabled={subtotal === 0}
+                      >
+                        {formatCurrency(amount)}
+                      </Button>
+                    ))}
+                  </div>
+                  <div className="flex gap-2 items-center">
+                    <Input 
+                      type="number" 
+                      placeholder={t("customDiscountPlaceholder") || "Enter custom discount"} 
+                      value={customDiscountInput} 
+                      onChange={(e) => handleCustomDiscountInputChange(e.target.value)}
+                      className="max-w-[200px]"
+                      min="0"
+                      disabled={subtotal === 0}
+                    />
+                    <Button onClick={handleApplyCustomDiscount} size="sm" disabled={!customDiscountInput || subtotal === 0}>{t("apply") || "Apply"}</Button>
+                    {discountAmount > 0 && (
+                      <Button onClick={handleClearDiscount} variant="ghost" size="sm" className="text-red-500 hover:text-red-600">
+                        {t("clearDiscount") || "Clear"}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                {/* Discount Section End */}
+
+                {discountAmount > 0 && (
+                  <div className="flex justify-between text-red-600 pt-2">
+                    <span>{t("discount")}</span>
+                    <span>-{formatCurrency(discountAmount)}</span>
+                  </div>
+                )}
+
+                <div className="flex justify-between font-medium text-lg pt-2 border-t mt-2">
                   <span>{t("total")}</span>
-                  <span>{formatCurrency(total)}</span>
+                  <span>{formatCurrency(finalTotal)}</span>
                 </div>
               </div>
             </>
