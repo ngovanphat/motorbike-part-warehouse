@@ -10,6 +10,7 @@ export type CartItem = {
   image: string
   quantity: number
   useBatchPrice: boolean
+  unit: string
 }
 
 type CartContextType = {

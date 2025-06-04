@@ -107,6 +107,7 @@ export default function CheckoutPage() {
       price: product.price,
       priceOfBatch: product.priceOfBatch,
       image: product.image,
+      unit: product.unit,
     })
   }
 
@@ -291,6 +292,7 @@ export default function CheckoutPage() {
                     <tr>
                       <th>${t("item")}</th>
                       <th class="text-right">${t("quantity")}</th>
+                      <th class="text-center">${t("unit")}</th>
                       <th class="text-right">${t("price")}</th>
                       <th class="text-right">${t("total")}</th>
                     </tr>
@@ -305,6 +307,7 @@ export default function CheckoutPage() {
                             ${item.useBatchPrice ? `<span class="batch-pricing">${t("batchPricing")}</span>` : ''}
                           </td>
                           <td class="text-right">${item.quantity}</td>
+                          <td class="text-center">${item.unit}</td>
                           <td class="text-right">${formatCurrency(getEffectivePrice(item))}</td>
                           <td class="text-right">${formatCurrency(getEffectivePrice(item) * item.quantity)}</td>
                         </tr>
@@ -489,6 +492,7 @@ export default function CheckoutPage() {
                 <tr className="border-b border-gray-300">
                   <th className="py-2 text-left">{t("item")}</th>
                   <th className="py-2 text-right">{t("quantity")}</th>
+                  <th className="py-2 text-center">{t("unit")}</th>
                   <th className="py-2 text-right">{t("price")}</th>
                   <th className="py-2 text-right">{t("total")}</th>
                 </tr>
@@ -509,6 +513,7 @@ export default function CheckoutPage() {
                       </div>
                     </td>
                     <td className="py-4 text-right">{item.quantity}</td>
+                    <td className="py-4 text-center">{item.unit}</td>
                     <td className="py-4 text-right">{formatCurrency(getEffectivePrice(item))}</td>
                     <td className="py-4 text-right">{formatCurrency(getEffectivePrice(item) * item.quantity)}</td>
                   </tr>
@@ -652,6 +657,7 @@ export default function CheckoutPage() {
                     <TableHead className="text-right">{t("price")}</TableHead>
                     <TableHead className="text-center w-[180px]">{t("batchPricing")}</TableHead>
                     <TableHead className="text-center">{t("quantity")}</TableHead>
+                    <TableHead className="text-center">{t("unit")}</TableHead>
                     <TableHead className="text-right">{t("total")}</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -697,38 +703,9 @@ export default function CheckoutPage() {
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex items-center justify-center">
-                          <Button 
-                            variant="outline" 
-                            size="icon" 
-                            className="h-8 w-8" 
-                            onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                            aria-label="Decrease quantity"
-                          >
-                            <Minus className="h-3 w-3" />
-                          </Button>
-                          <Input
-                            type="number"
-                            value={item.quantity}
-                            onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 0)}
-                            className="w-16 mx-1 text-center"
-                            min="1"
-                          />
-                          <Button 
-                            variant="outline" 
-                            size="icon" 
-                            className="h-8 w-8" 
-                            onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                            aria-label="Increase quantity"
-                          >
-                            <Plus className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {formatCurrency(getEffectivePrice(item) * item.quantity)}
-                      </TableCell>
+                      <TableCell className="text-center">{item.quantity}</TableCell>
+                      <TableCell className="text-center">{item.unit}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(getEffectivePrice(item) * item.quantity)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

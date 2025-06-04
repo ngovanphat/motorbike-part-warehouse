@@ -6,7 +6,7 @@ import type { Product } from "@/types/product"
 const SPREADSHEET_ID = process.env.NEXT_PUBLIC_GOOGLE_SPREADSHEET_ID
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY // Using the server-side variable
 const SHEET_NAME = "products_template" // The name of your sheet
-const RANGE = "A2:F100" // Adjust based on your data range
+const RANGE = "A2:G2000" // Adjust based on your data range
 /**
  * Server action to fetch products from Google Sheets
  */
@@ -66,7 +66,7 @@ export async function testSpreadsheetMetadata(sheetName = "Products") {
 /**
  * Server action to test sheet data
  */
-export async function testSheetData(sheetName = "Products", range = "A1:F100") {
+export async function testSheetData(sheetName = "Products", range = "A1:G100") {
   if (!SPREADSHEET_ID || !API_KEY) {
     throw new Error("Google Sheets API credentials are not configured")
   }
@@ -97,6 +97,7 @@ export async function testSheetData(sheetName = "Products", range = "A1:F100") {
             priceOfBatch: Number.parseFloat(row[2]) || 0,
             stock: Number.parseInt(row[5], 10) || 0,
             image: row[6] || "/placeholder.svg?height=400&width=400",
+            unit: row[7] || "cái" // Default to "cái" if no unit is specified
           }
         })
         .filter(Boolean)
@@ -128,6 +129,7 @@ function parseGoogleSheetsData(rows: string[][]): Product[] {
         priceOfBatch: Number.parseFloat(row[2]) || 0,
         stock: Number.parseInt(row[5], 10) || 0,
         image: row[6] || "/placeholder.svg?height=400&width=400",
+        unit: row[7] || "cái" // Default to "cái" if no unit is specified
       }
     })
 }

@@ -13,6 +13,7 @@ const mockProducts: Product[] = [
     priceOfBatch: 179.99,
     stock: 15,
     image: "/placeholder.svg?height=400&width=400",
+    unit: "cái"
   },
   {
     id: "2",
@@ -23,6 +24,7 @@ const mockProducts: Product[] = [
     priceOfBatch: 829.99,
     stock: 8,
     image: "/placeholder.svg?height=400&width=400",
+    unit: "cái"
   },
   {
     id: "3",
@@ -33,6 +35,7 @@ const mockProducts: Product[] = [
     priceOfBatch: 1199.99,
     stock: 5,
     image: "/placeholder.svg?height=400&width=400",
+    unit: "cái"
   },
   {
     id: "4",
@@ -42,6 +45,7 @@ const mockProducts: Product[] = [
     priceOfBatch: 219.99,
     stock: 20,
     image: "/placeholder.svg?height=400&width=400",
+    unit: "cái"
   },
   {
     id: "5",
@@ -51,6 +55,7 @@ const mockProducts: Product[] = [
     priceOfBatch: 129.99,
     stock: 12,
     image: "/placeholder.svg?height=400&width=400",
+    unit: "cái"
   },
   {
     id: "6",
@@ -60,6 +65,7 @@ const mockProducts: Product[] = [
     priceOfBatch: 299.99,
     stock: 0,
     image: "/placeholder.svg?height=400&width=400",
+    unit: "cái"
   },
   {
     id: "7",
@@ -69,6 +75,7 @@ const mockProducts: Product[] = [
     priceOfBatch: 749.99,
     stock: 3,
     image: "/placeholder.svg?height=400&width=400",
+    unit: "cái"
   },
   {
     id: "8",
@@ -79,6 +86,7 @@ const mockProducts: Product[] = [
     priceOfBatch: 109.99,
     stock: 18,
     image: "/placeholder.svg?height=400&width=400",
+    unit: "cái"
   },
   {
     id: "9",
@@ -88,6 +96,7 @@ const mockProducts: Product[] = [
     priceOfBatch: 469.99,
     stock: 2,
     image: "/placeholder.svg?height=400&width=400",
+    unit: "cái"
   },
   {
     id: "10",
@@ -97,6 +106,7 @@ const mockProducts: Product[] = [
     priceOfBatch: 109.99,
     stock: 7,
     image: "/placeholder.svg?height=400&width=400",
+    unit: "cái"
   },
 ]
 

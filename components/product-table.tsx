@@ -104,6 +104,7 @@ export function ProductTable() {
       price: product.price,
       priceOfBatch: product.priceOfBatch,
       image: product.image,
+      unit: product.unit,
     })
 
     toast({
@@ -193,13 +194,14 @@ export function ProductTable() {
               <TableHead className="text-right">{t("price")}</TableHead>
               <TableHead className="text-right">{t("priceOfBatch")}</TableHead>
               <TableHead className="text-center">{t("stock")}</TableHead>
-               <TableHead className="w-[100px] text-center">{t("action")}</TableHead>
-              </TableRow>
+              <TableHead className="text-center">{t("unit")}</TableHead>
+              <TableHead className="w-[100px] text-center">{t("action")}</TableHead>
+            </TableRow>
           </TableHeader>
           <TableBody>
             {filteredProducts.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
+                <TableCell colSpan={8} className="h-24 text-center">
                   {t("noProductsFound")}
                 </TableCell>
               </TableRow>
@@ -218,6 +220,7 @@ export function ProductTable() {
                         {product.stock} ({stockStatus.label})
                       </span>
                     </TableCell>
+                    <TableCell className="text-center">{product.unit}</TableCell>
                     <TableCell className="text-center">
                       <Button
                         variant="ghost"

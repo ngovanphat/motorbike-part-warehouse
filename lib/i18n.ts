@@ -56,6 +56,7 @@ export const translations = {
     continueShopping: "Continue Shopping",
     subtotal: "Subtotal",
     tax: "Tax",
+    unit: "Unit",
 
     // Checkout
     shippingInformation: "Shipping Information",
@@ -239,6 +240,7 @@ export const translations = {
 
     // Cache expiry
     expires: "hết hạn sau",
+    unit: "Đơn Vị",
   },
 }
 

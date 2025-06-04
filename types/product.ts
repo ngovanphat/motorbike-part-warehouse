@@ -6,4 +6,5 @@ export interface Product {
   priceOfBatch: number
   stock: number
   image: string
+  unit: string
 }
